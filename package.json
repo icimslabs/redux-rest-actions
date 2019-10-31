@@ -1,0 +1,85 @@
+{
+  "name": "redux-rest-actions",
+  "version": "1.0.0",
+  "main": "dist/redux-rest-actions.cjs.js",
+  "module": "dist/redux-rest-actions.esm.js",
+  "browser": "dist/redux-rest-actions.umd.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icimslabs/redux-rest-actions"
+  },
+  "scripts": {
+    "prepare": "yarn build",
+    "build": "npm run lint && rollup -c",
+    "build:watch": "rollup -c -w",
+    "watch": "concurrently 'npm build:watch' 'yarn serve -l tcp://127.0.0.1'",
+    "test": "jest",
+    "lint": "npx eslint src",
+    "test:coverage": "jest --collect-coverage",
+    "clean": "rimraf coverage dist redux-rest-actions-*.tgz node_modules"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.6.3",
+    "axios": "^0.19.0",
+    "core-js": "3",
+    "fast-deep-equal": "^2.0.1",
+    "lodash.debounce": "^4.0.8"
+  },
+  "peerDependencies": {
+    "redux": "^4.0.4"
+  },
+  "devDependencies": {
+    "@babel/core": "7.6.4",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/preset-env": "7.6.3",
+    "axios-mock-adapter": "^1.17.0",
+    "babel-core": "7.0.0-bridge.0",
+    "babel-jest": "24.9.0",
+    "concurrently": "4.1.2",
+    "eslint": "^6.5.1",
+    "husky": ">=1",
+    "jest": "24.9.0",
+    "lint-staged": ">=8",
+    "prettier": "^1.18.2",
+    "react-scripts": "^3.2.0",
+    "redux": "^4.0.4",
+    "redux-actions": "^2.6.5",
+    "redux-mock-store": "^1.5.3",
+    "rimraf": "^3.0.0",
+    "rollup": "1.24.0",
+    "rollup-plugin-analyzer": "^3.2.1",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-babel-minify": "^9.1.0",
+    "rollup-plugin-commonjs": "10.1.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-resolve": "5.2.0",
+    "rollup-plugin-terser": "^5.1.2",
+    "serve": "11.2.0"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "files": [
+    "dist"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,css,json,md}": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
+  }
+}
