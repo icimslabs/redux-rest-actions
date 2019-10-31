@@ -1,0 +1,23 @@
+{
+  "env": {
+    "browser": true,
+    "jest": true,
+    "es6": true
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "newline-after-var": 0,
+    "class-methods-use-this": 0,
+    "func-style": [
+      1,
+      "declaration",
+      {
+        "allowArrowFunctions": true
+      }
+    ]
+  },
+  "parserOptions": {
+    "ecmaVersion": 9,
+    "sourceType": "module"
+  }
+}
