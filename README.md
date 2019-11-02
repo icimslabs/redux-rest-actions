@@ -114,15 +114,15 @@ If your actions are functions, invoking `api.requestAction` will do the followin
 
 - Generate a [request config](https://github.com/axios/axios#request-config), and sends the REST request after checking any `overlappingRequests` or `debounce` options.
 
-- Dispatch your `requestAction` with the same arguments provided to `api.requestAction`.
+- Dispatch `requestAction`.
 
-- Dispatch your `successAction` or `errorAction` with API results or errors.
+- Dispatch `successAction` or `errorAction` with API results or errors.
 
 Your `successAction` is invoked as `successAction(response.data, response)`. The second argument is provided in case you want to access anything from [the full response](https://github.com/axios/axios#response-schema).
 
 If an error occurs, your `errorAction` will be invoked with the `Error` that was thrown. The error response is described [here](https://github.com/axios/axios#handling-errors). If `error.response` is not defined it means no response was received from the server.
 
-If `api.requestAction.cancel(reason)` is invoked while a request is pending, the results will be ignored and a `cancelAction` is defined will be invoked with `reason`.
+If `api.requestAction.cancel(reason)` is invoked while a request is pending, the results will be ignored and a `canceledAction`, if defined, will be invoked with `reason` and dispatched.
 
 ### Using Action Type Strings
 
@@ -146,14 +146,14 @@ The most common per-request parameters needed are URL `placeholders`, `query par
 
 ### Using Action Creators
 
-If your `requestAction` is an action creator `function`, the default behavior is as follows:
+If `requestAction` is an action creator `function`, the default behavior is as follows:
 
-- Your action creator is invoked, and the returned `action.payload` and `action.meta` properties are checked.
+- It is invoked, and the returned `action.payload` and `action.meta` properties are checked.
 - Any property in `action.payload` will be used to substitute URL `placeholders`. So `/todos/:id` would replace `:id` with the value of `payload.id`.
 - By default, the entire `action.payload` is used as `data` for POST/PUT/PATCH requests. However if there is an `action.payload.data` property, then that will be used as data.
-- All properties in `action.meta` will be added to the generated request config. Note that any property in `action.meta` will override corresponding properties in `action.payload`. If you provide a `meta` property it's probably best to just include URL placeholders in `payload` and put all request params in `meta`.
+- All properties of `action.meta` will be added to the generated request config. Note that any property in `action.meta` will override corresponding properties in `action.payload`. If you provide a `meta` property it's probably best to just include URL placeholders in `payload` and put all request params in `meta`.
 
-Example: Providing a URL placeholder and PUT data using an action creator:
+*Example*. Providing a URL placeholder and PUT data using an action creator:
 
 ```js
 import { createAction } from 'redux-actions';
@@ -187,12 +187,12 @@ export const updateTodo = createAction(
 
 ### Using Action Type Strings
 
-If `requestAction` is a `string`, then you can pass `api.requestAction` two objects, one representing the `payload` (with URL placeholders) and one representing `meta` properties, with any request config property. This will work as described above.
+If `requestAction` is a `string`, then you can pass `api.requestAction` two objects, one representing the `payload` (with URL placeholders) and one representing `meta` properties, with request config properties. 
 
-Using the same example above, if your API config was:
+Using the same example:
 
 ```js
-// Your API Config
+// API Config
 {
   updateTodo: {
     url: '/todos/:id',
@@ -217,7 +217,7 @@ Don't forget to include an empty object or `null` as the first paramter if you d
 // API Config
 {
   createTodo: {
-    url: '/todos/:id',
+    url: '/todos',
     actions: ['SAVE_TODO', 'SAVE_TODO_COMPLETE'],
     method: 'post'
   }
@@ -239,10 +239,8 @@ import {api} from 'redux-rest-actions';
 import selectFilters from './selectors';
 
 function onFetchTodos() {
-  api.getTodos(state => {
-    return {
+  api.getTodos(state => ({
       params: selectFilters(state)
-    };
   });
 }
 ```
