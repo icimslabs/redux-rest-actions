@@ -358,9 +358,16 @@ If you want to use the same method for all requests, You can specify a third arg
 
 ## API
 
-### `configureApiMiddleware(config = {}, options = {})`
+### `configureApiMiddleware`
 
-The first argument to `configureApiMiddleware` is used to [configure](https://github.com/axios/axios#request-config) the Axios instance used by the middleware. All options can be overriden per-request as described above.
+`configureApiMiddleware(config = {}, options = {})`
+
+The first argument to `configureApiMiddleware` is used to [configure](https://github.com/axios/axios#request-config) the Axios instance used by the middleware. All configuration values can be overriden per-request as described above. 
+
+Valid `options` are:
+* `mockAdapter` - Instance of `axios-mock-adapter`, see next section.
+* `mockDelay` - Mock delay in milliseconds.
+* `enableTracing` - `true` to enable console log trace of middleware actions.
 
 #### Using a mock adapter in development
 
@@ -403,9 +410,11 @@ test('getTodosSuccess', () => {
 });
 ```
 
-### `configureApi(store, apiConfig, overlappingDefaults = {overlappingRequests: 'sendLatest'})`
+### `configureApi`
 
-The first argument is the redux `store`. The store is used to dispatch actions invoked on `api`. It is also used to provide a way for your actions to get data and URL params from redux state as described below.
+`configureApi(store, apiConfig, overlappingDefaults = {overlappingRequests: 'sendLatest'})`
+
+The first argument is the redux `store`. The store is used to dispatch actions invoked on `api`. It is also used to provide a way for your actions to get data and URL params from redux state as described above.
 
 The second argument defines API configuration.
 
