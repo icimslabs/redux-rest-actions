@@ -1,5 +1,5 @@
 import Axios from 'axios';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 
 import {getPlaceholders, methodFromName, validateMethod, formatAction} from './utils';
 import {getMiddleware, sendRequest} from './apiMiddleware';
