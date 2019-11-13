@@ -978,4 +978,247 @@ describe('Api Middleware tests', () => {
     expect(actions[5].payload).toBe('Three');
     expect(actions[5].meta.config.params).toEqual({three: 3});
   });
+
+  test('chaining single to single actions', async () => {
+    const getUser = createAction('GET_USER', id => ({id}));
+    const getUserSuccess = createAction('GET_USER_SUCCESS');
+    const getUserPosts = createAction('GET_USER_POSTS', idOrPayload => {
+      if (typeof idOrPayload === 'string') return {userId: idOrPayload};
+      else return {userId: idOrPayload.id};
+    });
+    const getUserPostsSuccess = createAction('GET_USER_POSTS_SUCCESS');
+
+    const apiConfig = {
+      getUser: {
+        url: '/users/:id',
+        actions: [getUser, getUserSuccess],
+        then: 'getUserPosts'
+      },
+      getUserPosts: {
+        url: '/posts/:userId',
+        actions: [getUserPosts, getUserPostsSuccess]
+      }
+    };
+
+    const opts = {mockAdapter: MockAdapter};
+    apiMiddleware = configureApiMiddleware({}, opts);
+
+    store = configureMockStore([apiMiddleware])({});
+    configureApi(store, apiConfig);
+    const user = {name: 'bill', id: '1234'};
+    const posts = ['one', 'two'];
+    api.mockAdapter.onGet('/users/1234').reply(200, user);
+    api.mockAdapter.onGet('/posts/1234').reply(200, posts);
+
+    await api.getUser('1234');
+    await resolveWithDelay(null, 1); // wait for then request to complete
+
+    const actions = store.getActions();
+    expect(actions.length).toBe(4);
+
+    expect(actions[1].payload).toEqual(user);
+    expect(actions[2].type).toBe('GET_USER_POSTS');
+    expect(actions[3].type).toBe('GET_USER_POSTS_SUCCESS');
+    expect(actions[3].payload).toEqual(posts);
+  });
+
+  test('chaining single to multi actions, no spread', async () => {
+    const check = jest.fn();
+
+    const getUser = createAction('GET_USER', id => ({id}));
+    const getUserSuccess = createAction('GET_USER_SUCCESS');
+    const getMultipleThings = createAction('GET_MULTIPLE_THINGS', result => check(result));
+    const getMultipleThingsSuccess = createAction('GET_MULTIPLE_THINGS_SUCCESS', result => {
+      check(result);
+      return result;
+    });
+
+    const apiConfig = {
+      getUser: {
+        url: '/users/:id',
+        actions: [getUser, getUserSuccess],
+        then: 'getMultipleThings'
+      },
+      getMultipleThings: {
+        urls: ['/thing1', '/thing2'],
+        actions: [getMultipleThings, getMultipleThingsSuccess]
+      }
+    };
+    const opts = {mockAdapter: MockAdapter};
+    apiMiddleware = configureApiMiddleware({}, opts);
+
+    store = configureMockStore([apiMiddleware])({});
+    configureApi(store, apiConfig);
+    const user = {name: 'bill', id: '1234'};
+    const things = ['Thing One', 'Thing Two'];
+    api.mockAdapter.onGet('/users/1234').reply(200, user);
+    api.mockAdapter.onGet('/thing1').reply(200, 'Thing One');
+    api.mockAdapter.onGet('/thing2').reply(200, 'Thing Two');
+
+    await api.getUser('1234');
+    await resolveWithDelay(null, 1); // wait for then request to complete
+
+    const actions = store.getActions();
+    expect(actions.length).toBe(4);
+
+    expect(check.mock.calls.length).toBe(2);
+    expect(check.mock.calls[0][0]).toEqual(user);
+    expect(check.mock.calls[1][0]).toEqual(things);
+
+    expect(actions[1].payload).toEqual(user);
+    expect(actions[2].type).toBe('GET_MULTIPLE_THINGS');
+    expect(actions[3].type).toBe('GET_MULTIPLE_THINGS_SUCCESS');
+    expect(actions[3].payload).toEqual(things);
+  });
+
+  test('chaining single to multi actions, with spread', async () => {
+    const check = jest.fn();
+
+    const getUser = createAction('GET_USER', id => ({id}));
+    const getUserSuccess = createAction('GET_USER_SUCCESS');
+    const getMultipleThings = createAction('GET_MULTIPLE_THINGS', result => check(result));
+    const getMultipleThingsSuccess = createAction('GET_MULTIPLE_THINGS_SUCCESS', (one, two) => {
+      check(one, two);
+      return [one, two];
+    });
+
+    const apiConfig = {
+      getUser: {
+        url: '/users/:id',
+        actions: [getUser, getUserSuccess],
+        then: 'getMultipleThings'
+      },
+      getMultipleThings: {
+        urls: ['/thing1', '/thing2'],
+        actions: [getMultipleThings, getMultipleThingsSuccess],
+        spread: true
+      }
+    };
+    const opts = {mockAdapter: MockAdapter};
+    apiMiddleware = configureApiMiddleware({}, opts);
+
+    store = configureMockStore([apiMiddleware])({});
+    configureApi(store, apiConfig);
+    const user = {name: 'bill', id: '1234'};
+    const things = ['Thing One', 'Thing Two'];
+    api.mockAdapter.onGet('/users/1234').reply(200, user);
+    api.mockAdapter.onGet('/thing1').reply(200, 'Thing One');
+    api.mockAdapter.onGet('/thing2').reply(200, 'Thing Two');
+
+    await api.getUser('1234');
+    await resolveWithDelay(null, 1); // wait for then request to complete
+
+    const actions = store.getActions();
+    expect(actions.length).toBe(4);
+
+    expect(check.mock.calls.length).toBe(2);
+    expect(check.mock.calls[0][0]).toEqual(user);
+    expect(check.mock.calls[1][0]).toEqual('Thing One');
+    expect(check.mock.calls[1][1]).toEqual('Thing Two');
+
+    expect(actions[1].payload).toEqual(user);
+    expect(actions[2].type).toBe('GET_MULTIPLE_THINGS');
+    expect(actions[3].type).toBe('GET_MULTIPLE_THINGS_SUCCESS');
+    expect(actions[3].payload).toEqual(things);
+  });
+
+  test('chaining multiple to single action, without spread', async () => {
+    const check = jest.fn();
+
+    const getUser = createAction('GET_USER', (value1, value2) => {
+      check(value1, value2);
+      return {id: '1234'};
+    });
+    const getUserSuccess = createAction('GET_USER_SUCCESS');
+    const getMultipleThings = createAction('GET_MULTIPLE_THINGS', result => check(result));
+    const getMultipleThingsSuccess = createAction('GET_MULTIPLE_THINGS_SUCCESS', (one, two) => {
+      check(one, two);
+      return [one, two];
+    });
+
+    const apiConfig = {
+      getUser: {
+        url: '/users/:id',
+        actions: [getUser, getUserSuccess]
+      },
+      getMultipleThings: {
+        urls: ['/thing1', '/thing2'],
+        actions: [getMultipleThings, getMultipleThingsSuccess],
+        spread: false,
+        then: 'getUser'
+      }
+    };
+    const opts = {mockAdapter: MockAdapter};
+    apiMiddleware = configureApiMiddleware({}, opts);
+
+    store = configureMockStore([apiMiddleware])({});
+    configureApi(store, apiConfig);
+    const user = {name: 'bill', id: '1234'};
+    const things = ['Thing One', 'Thing Two'];
+    api.mockAdapter.onGet('/users/1234').reply(200, user);
+    api.mockAdapter.onGet('/thing1').reply(200, 'Thing One');
+    api.mockAdapter.onGet('/thing2').reply(200, 'Thing Two');
+
+    await api.getMultipleThings();
+    await resolveWithDelay(null, 1); // wait for then request to complete
+
+    const actions = store.getActions();
+    expect(actions.length).toBe(4);
+
+    expect(check.mock.calls.length).toBe(3);
+    expect(check.mock.calls[0][0]).toBe(undefined);
+    expect(check.mock.calls[1][0]).toEqual(things);
+    expect(check.mock.calls[1][1].length).toBe(2); // meta values
+
+    expect(check.mock.calls[2][0]).toEqual(things);
+    expect(check.mock.calls[2][1]).toBe(undefined);
+  });
+
+  test('chaining multiple to single action, with spread', async () => {
+    const check = jest.fn();
+
+    const getUser = createAction('GET_USER', (value1, value2, meta) => {
+      check(value1, value2, meta);
+      return {id: '1234'};
+    });
+    const getUserSuccess = createAction('GET_USER_SUCCESS');
+    const getMultipleThings = createAction('GET_MULTIPLE_THINGS', result => check(result));
+    const getMultipleThingsSuccess = createAction('GET_MULTIPLE_THINGS_SUCCESS', (one, two) => {
+      check(one, two);
+      return [one, two];
+    });
+
+    const apiConfig = {
+      getUser: {
+        url: '/users/:id',
+        actions: [getUser, getUserSuccess]
+      },
+      getMultipleThings: {
+        urls: ['/thing1', '/thing2'],
+        actions: [getMultipleThings, getMultipleThingsSuccess],
+        spread: true,
+        then: 'getUser'
+      }
+    };
+    const opts = {mockAdapter: MockAdapter};
+    apiMiddleware = configureApiMiddleware({}, opts);
+
+    store = configureMockStore([apiMiddleware])({});
+    configureApi(store, apiConfig);
+    const user = {name: 'bill', id: '1234'};
+    api.mockAdapter.onGet('/users/1234').reply(200, user);
+    api.mockAdapter.onGet('/thing1').reply(200, 'Thing One');
+    api.mockAdapter.onGet('/thing2').reply(200, 'Thing Two');
+
+    await api.getMultipleThings();
+    await resolveWithDelay(null, 1); // wait for then request to complete
+
+    const actions = store.getActions();
+    expect(actions.length).toBe(4);
+
+    expect(check.mock.calls.length).toBe(3);
+    expect(check.mock.calls[0][0]).toBe(undefined);
+    expect(check.mock.calls[1][0]).toEqual('Thing One');
+    expect(check.mock.calls[1][1]).toEqual('Thing Two');
+  });
 });

@@ -353,4 +353,90 @@ describe('configureApi tests', () => {
     expect(cfg.debounce2.debounceLeading).toBe(false);
     expect(cfg.debounce2.debounceTrailing).toBe(false);
   });
+
+  it('should not allow missing then targets', () => {
+    let apiConfig = {
+      one: {
+        url: '/one',
+        method: 'get',
+        actions: ['one', 'oneSuccess'],
+        then: 'two'
+      },
+      two: {
+        url: '/two',
+        method: 'get',
+        actions: ['two', 'twoSuccess'],
+        then: 'three'
+      }
+    };
+
+    expect(() => {
+      configureApi(store, apiConfig);
+    }).toThrow(/Invalid then target in one, three is not defined/);
+  });
+
+  it('should not allow circular then targets', () => {
+    let apiConfig = {
+      one: {
+        url: '/one',
+        method: 'get',
+        actions: ['one', 'oneSuccess'],
+        then: 'two'
+      },
+      two: {
+        url: '/two',
+        method: 'get',
+        actions: ['two', 'twoSuccess'],
+        then: 'three'
+      },
+      three: {
+        url: '/three',
+        method: 'get',
+        actions: ['three', 'threeSuccess'],
+        then: 'four'
+      },
+      four: {
+        url: '/four',
+        method: 'get',
+        actions: ['four', 'fourSuccess'],
+        then: 'two'
+      }
+    };
+
+    expect(() => {
+      configureApi(store, apiConfig);
+    }).toThrow(/Invalid then target, two called more than once/);
+  });
+
+  it('should allow valid then targets', () => {
+    let apiConfig = {
+      one: {
+        url: '/one',
+        method: 'get',
+        actions: ['one', 'oneSuccess'],
+        then: 'two'
+      },
+      two: {
+        url: '/two',
+        method: 'get',
+        actions: ['two', 'twoSuccess'],
+        then: 'three'
+      },
+      three: {
+        url: '/three',
+        method: 'get',
+        actions: ['three', 'threeSuccess'],
+        then: 'four'
+      },
+      four: {
+        url: '/four',
+        method: 'get',
+        actions: ['four', 'fourSuccess']
+      }
+    };
+
+    expect(() => {
+      configureApi(store, apiConfig);
+    }).not.toThrow();
+  });
 });

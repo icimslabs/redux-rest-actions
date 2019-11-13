@@ -31,28 +31,45 @@ function log(message) {
   }
 }
 
-function handleSuccess(name, store, res, successAction) {
-  log(`dispatching success action for ${name}`);
-  const action = successAction((res && res.data) || null);
+function checkAndDispatchThen(apiConfig, store, data) {
+  if (apiConfig.then) {
+    log(`dispatching then action ${apiConfig.then} for ${apiConfig.name}`);
+    let args = [data];
+    if (apiConfig.urls.length > 1 && apiConfig.spread) {
+      args = [...data];
+    }
+    store.dispatch({
+      type: API_REQUEST_TYPE,
+      name: apiConfig.then,
+      args
+    });
+  }
+}
+
+function handleSuccess(apiConfig, store, res) {
+  log(`dispatching success action for ${apiConfig.name}`);
+  const action = apiConfig.successAction((res && res.data) || null);
   if (!action.meta) {
     action.meta = res;
   }
   store.dispatch(action);
+  checkAndDispatchThen(apiConfig, store, res.data);
 }
 
-function handleSuccessMultiple(name, store, results, successAction, spread) {
-  log(`dispatching success action for multiple results ${name}`);
+function handleSuccessMultiple(apiConfig, store, results) {
+  log(`dispatching success action for multiple results ${apiConfig.name}`);
   const combined = results.map(res => res.data);
   let action = null;
-  if (spread) {
-    action = successAction(...combined, results);
+  if (apiConfig.spread) {
+    action = apiConfig.successAction(...combined, results);
   } else {
-    action = successAction(combined, results);
+    action = apiConfig.successAction(combined, results);
   }
   if (!action.meta) {
     action.meta = results;
   }
   store.dispatch(action);
+  checkAndDispatchThen(apiConfig, store, combined);
   return combined;
 }
 
@@ -77,7 +94,7 @@ async function sendAxiosRequest(url, apiConfig, requestConfig, store) {
   let res = null;
   try {
     res = await axios(cfg);
-    handleSuccess(apiConfig.name, store, res, apiConfig.successAction);
+    handleSuccess(apiConfig, store, res);
     return res && res.data ? res.data : null;
   } catch (err) {
     const isCancel = handleError(apiConfig.name, store, err, apiConfig.errorAction);
@@ -97,14 +114,7 @@ async function sendAxiosRequests(urls, apiConfig, requestConfig, store) {
 
   try {
     let results = await Promise.all(allRequests);
-    const spread = apiConfig.spread ? true : false;
-    results = handleSuccessMultiple(
-      apiConfig.name,
-      store,
-      results,
-      apiConfig.successAction,
-      spread
-    );
+    results = handleSuccessMultiple(apiConfig, store, results);
     return results;
   } catch (err) {
     const isCancel = handleError(apiConfig.name, store, err, apiConfig.errorAction);

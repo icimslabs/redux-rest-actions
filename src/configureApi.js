@@ -180,6 +180,7 @@ function processConfigItem(name, item, overlapDefaults) {
   // requestAction, successAction, errorAction, cancelAction
   const actionFunctions = getActions(item);
   const debounceOptions = getDebounceOpts(overlappingRequests, item, overlapDefaults);
+  const then = item.then || null;
 
   return {
     name,
@@ -189,7 +190,8 @@ function processConfigItem(name, item, overlapDefaults) {
     spread,
     overlappingRequests,
     ...actionFunctions,
-    ...debounceOptions
+    ...debounceOptions,
+    then
   };
 }
 
@@ -214,6 +216,23 @@ function checkOverlapDefaults(overlapDefaults) {
     true
   );
   return newDefaults;
+}
+
+function validateThenChain(config) {
+  Object.keys(config).forEach(name => {
+    const targets = [];
+    let next = config[name].then;
+    while (next) {
+      if (targets.indexOf(next) >= 0) {
+        throw new Error(`Invalid then target, ${next} called more than once`);
+      }
+      if (!config[next]) {
+        throw new Error(`Invalid then target in ${name}, ${next} is not defined`);
+      }
+      targets.push(next);
+      next = config[next].then;
+    }
+  });
 }
 
 const configureApi = (store, config, overlapDefaults = {overlappingRequests: SEND_LATEST}) => {
@@ -252,6 +271,9 @@ const configureApi = (store, config, overlapDefaults = {overlappingRequests: SEN
   if (Object.keys(apiConfiguration).length === 0) {
     throw new Error('configureApi did not contain any valid request configurations');
   }
+
+  validateThenChain(apiConfiguration);
+
   // returned for use with tests
   return apiConfiguration;
 };

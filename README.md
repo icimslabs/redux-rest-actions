@@ -153,7 +153,7 @@ If `requestAction` is an action creator `function`, the default behavior is as f
 - By default, the entire `action.payload` is used as `data` for POST/PUT/PATCH requests. However if there is an `action.payload.data` property, then that will be used as data.
 - All properties of `action.meta` will be added to the generated request config. Note that any property in `action.meta` will override corresponding properties in `action.payload`. If you provide a `meta` property it's probably best to just include URL placeholders in `payload` and put all request params in `meta`.
 
-*Example*. Providing a URL placeholder and PUT data using an action creator:
+_Example_. Providing a URL placeholder and PUT data using an action creator:
 
 ```js
 import { createAction } from 'redux-actions';
@@ -187,7 +187,7 @@ export const updateTodo = createAction(
 
 ### Using Action Type Strings
 
-If `requestAction` is a `string`, then you can pass `api.requestAction` two objects, one representing the `payload` (with URL placeholders) and one representing `meta` properties, with request config properties. 
+If `requestAction` is a `string`, then you can pass `api.requestAction` two objects, one representing the `payload` (with URL placeholders) and one representing `meta` properties, with request config properties.
 
 Using the same example:
 
@@ -240,7 +240,7 @@ import selectFilters from './selectors';
 
 function onFetchTodos() {
   api.getTodos(state => ({
-      params: selectFilters(state)
+    params: selectFilters(state)
   });
 }
 ```
@@ -302,6 +302,47 @@ const getMultipleThingsSuccess = createAction('MULTIPLE_THINGS_SUCCESS', (one, t
 
 Then `one` will be `"Thing One"` and `two` will be `"Thing Two"`. Your `successAction` will still be passed the array of all response objects as the last argument.
 
+## Chaining Requests
+
+If one of your actions requires the results of a previous request, you can chain them using a `then` target in the api config. In this example `getUserPosts` requires `getUser` to have been called. When `getUser` completes, `getUserSuccess` will be dispatched to update state with the user, and then `getUserPosts` will be dispatched. The `getUserPosts` action creator will be invoked with the `getUser` response data, in addition to whatever other arguments you normally invoke it with. In this example, it checks if both cases, and returns the `userId` accordingly:
+
+```js
+// actions
+const getUser = createAction('GET_USER', (id) => ({id}));
+const getUserSuccess = createAction('GET_USER_SUCCESS');
+
+const getUserPosts = createAction('GET_USER_POSTS', (idOrPayload) => {
+  if (typeof obj === 'string') return {userId: idOrPayload};
+  else return {userId: idOrPayload.id};
+});
+const getUserPostsSuccess = createAction('GET_USER_POSTS_SUCCESS');
+
+{
+  getUser: {
+    url: '/users/:id'
+    actions: [getUser, getUserSuccess],
+    then: 'getUserPosts'
+  },
+  getUserPosts: {
+    url: '/posts/:userId'
+    actions: [getUserPosts, getUserPostsSuccess]
+  }
+}
+```
+
+Alternatively, `getUserSuccess` can store the user in Redux state, and `getUserPosts` can be invoked from `api` by passing a state access function to get the `userId` as described above:
+
+```js
+import {api} from 'redux-rest-actions';
+import selectUser from './selectors';
+
+function onFetchUserPosts() {
+  api.getUserPosts(state => ({
+      userId: selectUser(state)
+  });
+}
+```
+
 ## Behavior when invoking overlapping API requests
 
 When `api.requestAction` is invoked while a request is already in progress, you can configure options for how this is handled using the `overlappingRequests` api config option. The values are as follows:
@@ -362,12 +403,13 @@ If you want to use the same method for all requests, You can specify a third arg
 
 `configureApiMiddleware(config = {}, options = {})`
 
-The first argument to `configureApiMiddleware` is used to [configure](https://github.com/axios/axios#request-config) the Axios instance used by the middleware. All configuration values can be overriden per-request as described above. 
+The first argument to `configureApiMiddleware` is used to [configure](https://github.com/axios/axios#request-config) the Axios instance used by the middleware. All configuration values can be overriden per-request as described above.
 
 Valid `options` are:
-* `mockAdapter` - Instance of `axios-mock-adapter`, see next section.
-* `mockDelay` - Mock delay in milliseconds.
-* `enableTracing` - `true` to enable console log trace of middleware actions.
+
+- `mockAdapter` - Instance of `axios-mock-adapter`, see next section.
+- `mockDelay` - Mock delay in milliseconds.
+- `enableTracing` - `true` to enable console log trace of middleware actions.
 
 #### Using a mock adapter in development
 
@@ -455,10 +497,8 @@ The return value from `api.requestAction` is a promise in all cases except when 
 
 ```js
 function onSubmitForm(data) {
-  api.onSubmit(data)
-    .then(() => history.push('/home'));
+  api.onSubmit(data).then(() => history.push('/home'));
 }
 ```
 
-
-
+**NOTE**: The promise returned by `api.requestAction` is only for the action itself, and does not include any chained action using a `then` request in the api config.
