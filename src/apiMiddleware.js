@@ -46,11 +46,59 @@ function checkAndDispatchThen(apiConfig, store, data) {
   }
 }
 
+// Check if response is a single response or array, then
+// remove all non serializable props from the response config
+function checkResponse(response) {
+  if (Array.isArray(response)) {
+    const newValues = [];
+    response.forEach(resp => {
+      newValues.push(removeNonSerializable(resp));
+    });
+    return newValues;
+  } else if (typeof response === 'object') {
+    return removeNonSerializable(response);
+  } else {
+    return response;
+  }
+}
+
+// Remove all function props from response.config object
+function removeNonSerializable(response) {
+  const ignoreProps = [
+    'transformRequest',
+    'transformResponse',
+    'paramsSerializer',
+    'adapter',
+    'onUploadProgress',
+    'onDownloadProgress',
+    'validateStatus',
+    'cancelToken'
+  ];
+  const updated = {};
+  ['data', 'status', 'statusText', 'headers', 'request'].forEach(prop => {
+    if (response[prop]) {
+      updated[prop] = response[prop];
+    }
+  });
+  if (response.config) {
+    Object.keys(response.config).forEach(prop => {
+      if (response.config[prop] && ignoreProps.indexOf(prop) === -1) {
+        if (!updated.config) {
+          // Only create if needed, helps with test assertions
+          updated.config = {};
+        }
+        updated.config[prop] = response.config[prop];
+      }
+    });
+  }
+  return updated;
+}
+
 function handleSuccess(apiConfig, store, res) {
   log(`dispatching success action for ${apiConfig.name}`);
   const action = apiConfig.successAction((res && res.data) || null);
   if (!action.meta) {
-    action.meta = res;
+    action.meta = checkResponse(res);
   }
   store.dispatch(action);
   checkAndDispatchThen(apiConfig, store, res.data);
@@ -66,7 +114,7 @@ function handleSuccessMultiple(apiConfig, store, results) {
     action = apiConfig.successAction(combined, results);
   }
   if (!action.meta) {
-    action.meta = results;
+    action.meta = checkResponse(results);
   }
   store.dispatch(action);
   checkAndDispatchThen(apiConfig, store, combined);

@@ -120,6 +120,8 @@ If your actions are functions, invoking `api.requestAction` will do the followin
 
 Your `successAction` is invoked as `successAction(response.data, response)`. The second argument is provided in case you want to access anything from [the full response](https://github.com/axios/axios#response-schema).
 
+**NOTE**: The `response.config` object has all non-serializable properties (functions and promises) removed.
+
 If an error occurs, your `errorAction` will be invoked with the `Error` that was thrown. The error response is described [here](https://github.com/axios/axios#handling-errors). If `error.response` is not defined it means no response was received from the server.
 
 If `api.requestAction.cancel(reason)` is invoked while a request is pending, the results will be ignored and a `canceledAction`, if defined, will be invoked with `reason` and dispatched.
@@ -259,6 +261,8 @@ In this case `state.filters` will be added to `requestParams`.
 ## Making multiple REST requests with a single action
 
 In the API config, you can specify an array of URLs with the `urls` property. They will be sent in parallel using `Promise.all`, and your `successAction` will be invoked with two arrays, the first array containing `response.data` from each URL, and the second array containing `response` (the full response object) corresponding to each URL.
+
+**NOTE**: The `response.config` object has all non-serializable properties (functions and promises) removed.
 
 As an example, if your API config has:
 
