@@ -1,10 +1,12 @@
 # Change log
 
+## [1.1.3] - 2019-12-12
+
+Related to 1.1.2, also removed babel/plugin-transform-runtime.
+
 ## [1.1.2] - 2019-12-12
 
 Added corejs version 3 to `.babelrc`. This fixed error `Can't resolve 'core-js/modules/es6.array.iterator'` occurring in apps generated with the latest `create-react-app` version.
-
-## [1.1.1] - 2019-12-04
 
 ## [1.1.1] - 2019-12-04
 
