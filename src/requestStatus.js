@@ -47,15 +47,6 @@ export const saveRequest = (name, requestAction, requestConfig, cancelSource) =>
   }
 };
 
-export const clearSavedRequests = name => {
-  let status = allRequests[name];
-  if (status) {
-    status.savedRequest = null;
-    status.savedConfig = null;
-    status.savedCancelSource = null;
-  }
-};
-
 export const cancelRequest = (name, requestConfig) => {
   const status = allRequests[name];
   if (!status) {
@@ -109,10 +100,14 @@ export const completeRequest = (name, requestConfig, log) => {
 
 export const getSavedRequest = name => {
   const status = allRequests[name];
-  if (!status) {
-    return [null, null, null];
+  let request = [null, null, null];
+  if (status) {
+    request = [status.savedRequest, status.savedConfig, status.savedCancelSource];
+    allRequests[name].savedRequest = null;
+    allRequests[name].savedConfig = null;
+    allRequests[name].savedCancelSource = null;
   }
-  return [status.savedRequest, status.savedConfig, status.savedCancelSource];
+  return request;
 };
 
 export const getLatestRequest = name => {

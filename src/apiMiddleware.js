@@ -9,8 +9,7 @@ import {
   getSavedRequest,
   getRequestCount,
   saveRequest,
-  getLatestRequest,
-  clearSavedRequests
+  getLatestRequest
 } from './requestStatus';
 
 // Instance set in getMiddleware. The isCancel and CancelToken properties
@@ -228,12 +227,12 @@ export async function sendRequest(
   }
 
   const [latestRequest, latestConfig, latestCancelSource] = getSavedRequest(action.name);
-  clearSavedRequests();
+
   // This condition only occurs when overlap mode is SEND_LATEST
   if (latestConfig && !deepEqual(latestConfig, requestConfig)) {
     // Complete the previous request and start a new one
     completeRequest(action.name, requestConfig, enableTracing ? log : null);
-    const newPromise = config.sendRequest(
+    const newResult = config.sendRequest(
       store,
       apiConfig,
       action,
@@ -242,7 +241,7 @@ export async function sendRequest(
       latestConfig,
       latestCancelSource
     );
-    return newPromise;
+    return newResult;
   }
 
   completeRequest(action.name, requestConfig, enableTracing ? log : null);

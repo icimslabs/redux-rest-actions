@@ -6,8 +6,7 @@ import {
   getLatestRequest,
   getRequestCount,
   resetRequests,
-  saveRequest,
-  clearSavedRequests
+  saveRequest
 } from './requestStatus';
 
 describe('requestStatus tests', () => {
@@ -205,15 +204,5 @@ describe('requestStatus tests', () => {
 
     saveRequest('getTodos', request2_save, config2_save, cancel2_save);
     expect(getSavedRequest('getTodos')).toEqual([request2_save, config2_save, cancel2_save]);
-
-    clearSavedRequests('getTodos');
-    expect(getSavedRequest('getTodos')).toEqual([null, null, null]);
-
-    clearSavedRequests('getTodos');
-    expect(getSavedRequest('getTodos')).toEqual([null, null, null]);
-  });
-
-  test('clear status with no requests', () => {
-    clearSavedRequests();
   });
 });
