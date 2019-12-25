@@ -1,8 +1,8 @@
 # Change log
 
-## [1.1.4] - 2019-12-24
+## [1.1.4] - 2019-12-26
 
-Fixed bug where `overlappingRequests` set to `sendLatest` failed to cleanup the earlier request.
+Fixed bug where `overlappingRequests` set to `sendLatest` failed to clear the earlier request, resulting in requests after the first change not to be sent.
 
 ## [1.1.3] - 2019-12-12
 
