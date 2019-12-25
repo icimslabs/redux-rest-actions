@@ -7,10 +7,10 @@ import {
   completeRequest,
   resetRequests,
   getSavedRequest,
-  clearSavedRequests,
   getRequestCount,
   saveRequest,
-  getLatestRequest
+  getLatestRequest,
+  clearSavedRequests
 } from './requestStatus';
 
 // Instance set in getMiddleware. The isCancel and CancelToken properties
@@ -228,29 +228,21 @@ export async function sendRequest(
   }
 
   const [latestRequest, latestConfig, latestCancelSource] = getSavedRequest(action.name);
-
+  clearSavedRequests();
   // This condition only occurs when overlap mode is SEND_LATEST
   if (latestConfig && !deepEqual(latestConfig, requestConfig)) {
     // Complete the previous request and start a new one
     completeRequest(action.name, requestConfig, enableTracing ? log : null);
-    createRequest(action.name, latestRequest, latestConfig, latestCancelSource);
-
-    log(`===> requestConfig for ${action.name} has changed, sending latest request`);
-    // completeAction has been dispatched with first result, need to
-    // dispatch the latest requestAction with the latest axios config.
-    createRequest(action.name, latestRequest, latestConfig, latestCancelSource);
-    clearSavedRequests(action.name);
-
-    store.dispatch(latestRequest);
-    const newPromise =
-      requestUrls.length === 1
-        ? sendAxiosRequest(requestUrls[0], config, latestConfig, store)
-        : sendAxiosRequests(requestUrls, config, latestConfig, store);
-    return newPromise.then(response => {
-      log(`sendLatest request COMPLETE`);
-      completeRequest(action.name, latestConfig, enableTracing ? log : null);
-      return response;
-    });
+    const newPromise = config.sendRequest(
+      store,
+      apiConfig,
+      action,
+      latestRequest,
+      requestUrls,
+      latestConfig,
+      latestCancelSource
+    );
+    return newPromise;
   }
 
   completeRequest(action.name, requestConfig, enableTracing ? log : null);
