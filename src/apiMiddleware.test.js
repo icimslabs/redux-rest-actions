@@ -625,13 +625,16 @@ describe('Api Middleware tests', () => {
     api.mockAdapter.onGet('/api/search', {params: {q: 'ABCD'}}).reply(200, 'search results ABCD');
     api.mockAdapter.onGet('/api/search').reply(200, 'search results');
 
-    const initialRequest = api.search({q: 'A'});
+    const firstRequest = api.search({q: 'A'});
     api.search({q: 'AB'});
     api.search({q: 'ABC'});
-    api.search({q: 'ABCD'});
-    let results = await initialRequest;
+    const fourthRequest = api.search({q: 'ABCD'});
+
+    let results = await firstRequest;
     expect(results).toBe('search results ABCD');
     let actions = store.getActions();
+
+    results = await fourthRequest;
 
     expect(actions.length).toBe(4);
     expect(actions[0]).toEqual(search({q: 'A'}));

@@ -174,9 +174,9 @@ async function sendAxiosRequests(urls, apiConfig, requestConfig, store) {
   }
 }
 
-function handleOverlappingRequest(apiConfig, requestAction, requestConfig) {
+function handleOverlappingRequest(apiConfig, requestAction, requestConfig, cancelSource) {
   if (apiConfig.overlappingRequests === SEND_LATEST) {
-    saveRequest(apiConfig.name, requestAction, requestConfig);
+    saveRequest(apiConfig.name, requestAction, requestConfig, cancelSource);
     log(`Overlapping request for ${apiConfig.name}, storing latest axios config`);
     // Don't send request, latestConfig will be checked when first
     // response is recieved.
@@ -227,25 +227,32 @@ export async function sendRequest(
     res = await sendAxiosRequests(requestUrls, config, requestConfig, store);
   }
 
-  // This only occurs when overlap mode is SEND_LATEST
-  const [latestRequest, latestConfig] = getSavedRequest(action.name);
+  const [latestRequest, latestConfig, latestCancelSource] = getSavedRequest(action.name);
+
+  // This condition only occurs when overlap mode is SEND_LATEST
   if (latestConfig && !deepEqual(latestConfig, requestConfig)) {
+    // Complete the previous request and start a new one
+    completeRequest(action.name, requestConfig, enableTracing ? log : null);
+    createRequest(action.name, latestRequest, latestConfig, latestCancelSource);
+
     log(`===> requestConfig for ${action.name} has changed, sending latest request`);
     // completeAction has been dispatched with first result, need to
     // dispatch the latest requestAction with the latest axios config.
+    createRequest(action.name, latestRequest, latestConfig, latestCancelSource);
+    clearSavedRequests(action.name);
 
     store.dispatch(latestRequest);
     const newPromise =
       requestUrls.length === 1
         ? sendAxiosRequest(requestUrls[0], config, latestConfig, store)
         : sendAxiosRequests(requestUrls, config, latestConfig, store);
-    clearSavedRequests(action.name);
     return newPromise.then(response => {
       log(`sendLatest request COMPLETE`);
-      completeRequest(action.name, requestConfig, enableTracing ? log : null);
+      completeRequest(action.name, latestConfig, enableTracing ? log : null);
       return response;
     });
   }
+
   completeRequest(action.name, requestConfig, enableTracing ? log : null);
   return res;
 }
@@ -305,7 +312,7 @@ export function getMiddleware(apiConfig, axiosInstance, enableTracingFlag = fals
 
     return (async () => {
       if (getRequestCount(action.name)) {
-        if (!handleOverlappingRequest(config, requestAction, requestConfig)) {
+        if (!handleOverlappingRequest(config, requestAction, requestConfig, cancelSource)) {
           // Not dispatching this request
           return;
         }
