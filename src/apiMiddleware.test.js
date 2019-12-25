@@ -620,24 +620,30 @@ describe('Api Middleware tests', () => {
   //
 
   test('overlappingRequests - sendLatest', async () => {
-    setupWithMockAdapter(3);
+    setupWithMockAdapter(2);
+    api.mockAdapter.onGet('/api/search', {params: {q: 'A'}}).reply(200, 'search results A');
+    api.mockAdapter.onGet('/api/search', {params: {q: 'ABCD'}}).reply(200, 'search results ABCD');
     api.mockAdapter.onGet('/api/search').reply(200, 'search results');
 
     const initialRequest = api.search({q: 'A'});
     api.search({q: 'AB'});
     api.search({q: 'ABC'});
     api.search({q: 'ABCD'});
-
-    const results = await initialRequest;
-    expect(results).toBe('search results');
-
-    const actions = store.getActions();
+    let results = await initialRequest;
+    expect(results).toBe('search results ABCD');
+    let actions = store.getActions();
 
     expect(actions.length).toBe(4);
     expect(actions[0]).toEqual(search({q: 'A'}));
-    expect(actions[1].payload).toEqual('search results');
+    expect(actions[1].payload).toEqual('search results A');
     expect(actions[2]).toEqual(search({q: 'ABCD'}));
-    expect(actions[3].payload).toEqual('search results');
+    expect(actions[3].payload).toEqual('search results ABCD');
+
+    const finalRequest = api.search({q: 'A'});
+    results = await finalRequest;
+    expect(results).toBe('search results A');
+    actions = store.getActions();
+    expect(actions.length).toBe(6);
   });
 
   test('overlappingRequests - ignore', async () => {

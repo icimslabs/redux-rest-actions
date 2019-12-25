@@ -89,9 +89,10 @@ export const cancelRequest = (name, requestConfig) => {
   }
 };
 
-export const completeRequest = (name, requestConfig) => {
+export const completeRequest = (name, requestConfig, log) => {
   const status = allRequests[name];
   if (!status) {
+    log && log(`no existing requests found for ${name}`);
     return;
   }
   const cancelSource = status.map.get(requestConfig);
@@ -99,7 +100,10 @@ export const completeRequest = (name, requestConfig) => {
     status.map.delete(requestConfig);
   }
   if (status.map.size === 0) {
+    log && log(`all requests complete for for ${name}`);
     delete allRequests[name];
+  } else {
+    log && log(`requests still pending for ${name}`);
   }
 };
 

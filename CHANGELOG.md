@@ -1,5 +1,9 @@
 # Change log
 
+## [1.1.4] - 2019-12-24
+
+Fixed bug where `overlappingRequests` set to `sendLatest` failed to cleanup the earlier request.
+
 ## [1.1.3] - 2019-12-12
 
 Related to 1.1.2, also removed babel/plugin-transform-runtime.

@@ -1,6 +1,6 @@
 import deepEqual from 'fast-deep-equal';
 import {createAxiosConfig} from './utils';
-import {API_REQUEST_TYPE, API_CANCEL_TYPE, SEND_LATEST, IGNORE, SEND_ALL} from './types';
+import {API_REQUEST_TYPE, API_CANCEL_TYPE, SEND_LATEST, DEBOUNCE, IGNORE, SEND_ALL} from './types';
 import {
   createRequest,
   cancelRequest,
@@ -187,6 +187,8 @@ function handleOverlappingRequest(apiConfig, requestAction, requestConfig) {
   } else if (apiConfig.overlappingRequests === IGNORE) {
     log(`Ignoring overlapping request for ${apiConfig.name}`);
     return false;
+  } else if (apiConfig.overlappingRequests === DEBOUNCE) {
+    return true;
   } else {
     // CANCEL_PENDING
     // eslint-disable-next-line
@@ -231,15 +233,20 @@ export async function sendRequest(
     log(`===> requestConfig for ${action.name} has changed, sending latest request`);
     // completeAction has been dispatched with first result, need to
     // dispatch the latest requestAction with the latest axios config.
+
     store.dispatch(latestRequest);
     const newPromise =
       requestUrls.length === 1
         ? sendAxiosRequest(requestUrls[0], config, latestConfig, store)
         : sendAxiosRequests(requestUrls, config, latestConfig, store);
     clearSavedRequests(action.name);
-    return newPromise;
+    return newPromise.then(response => {
+      log(`sendLatest request COMPLETE`);
+      completeRequest(action.name, requestConfig, enableTracing ? log : null);
+      return response;
+    });
   }
-  completeRequest(action.name, requestConfig);
+  completeRequest(action.name, requestConfig, enableTracing ? log : null);
   return res;
 }
 
