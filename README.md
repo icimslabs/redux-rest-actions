@@ -486,6 +486,7 @@ Each named property defines a request action with the following properties:
 
 - `configOption` - `optional`. Any per-request configuration defined [here](https://github.com/axios/axios#request-config).
 
+#### Default method names
 Default method names, based on the name of the request action prefix are determined as follows:
 
 ```javascript
