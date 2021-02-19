@@ -111,7 +111,7 @@ export function substituteUrlParams(urls, placeholders, payload) {
       if (newUrl.indexOf(`:${key}`) >= 0) {
         const prop = getProperty(key, payload);
         if (prop) {
-          newUrl = url.replace(`:${key}`, prop);
+          newUrl = newUrl.replace(`:${key}`, prop);
         } else {
           // Throw exception if the URL actually contains the parameter
           // but it is not found in the action payload

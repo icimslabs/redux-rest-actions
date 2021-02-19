@@ -1,5 +1,20 @@
 # Change log
 
+## [1.1.5] - 2019-12-26
+Applied all git auto generated pull requests:
+
+* Bump xios 0.19 to 0.21.1
+* Bump ini from 1.3.5 to 1.3.8
+* Bump http-proxy from 1.18.0 to 1.18.1
+* Bump handlebars from 4.4.3 to 4.7.6
+* Bump tree-kill from 1.2.1 to 1.2.2
+* Bump elliptic from 6.5.1 to 6.5.3
+* Bump lodash from 4.17.15 to 4.17.19
+* Bump websocket-extensions from 0.1.3 to 0.1.4
+* Bump acorn from 5.7.3 to 5.7.4
+
+Fix for failure to substitute multiple URL params: https://github.com/icimslabs/redux-rest-actions/issues/8
+
 ## [1.1.4] - 2019-12-26
 
 Fixed bug where `overlappingRequests` set to `sendLatest` failed to clear the earlier request, resulting in requests after the first change not to be sent.

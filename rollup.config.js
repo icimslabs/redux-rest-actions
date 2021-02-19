@@ -3,7 +3,6 @@ import commonjs from 'rollup-plugin-commonjs';
 import pkg from './package.json';
 import babel from 'rollup-plugin-babel';
 import json from 'rollup-plugin-json';
-import minify from 'rollup-plugin-babel-minify';
 import builtins from 'rollup-plugin-node-builtins';
 import analyze from 'rollup-plugin-analyzer';
 import { terser } from "rollup-plugin-terser";
@@ -24,7 +23,6 @@ export default [
         exclude: 'node_modules/**',
         runtimeHelpers: true
       }),
-      minify(),
       json({}),
       builtins(),
       analyze({summaryOnly: true}),

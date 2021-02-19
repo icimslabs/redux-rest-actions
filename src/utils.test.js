@@ -120,7 +120,7 @@ describe('utils tests', () => {
   test('substituteUrlParams', () => {
     let urls = ['/todos'];
 
-    let placeholders = ['id'];
+    let placeholders = ['id', 'more'];
     let payload = {id: 123};
     let newUrls = substituteUrlParams(urls, placeholders, payload);
     expect(newUrls).toEqual(['/todos']);
@@ -128,6 +128,11 @@ describe('utils tests', () => {
     urls = ['/todos/:id'];
     newUrls = substituteUrlParams(urls, placeholders, payload);
     expect(newUrls).toEqual(['/todos/123']);
+
+    urls = ['/todos/:id/and/:more'];
+    payload.more = '456';
+    newUrls = substituteUrlParams(urls, placeholders, payload);
+    expect(newUrls).toEqual(['/todos/123/and/456']);
   });
 
   it('should create an axios config from payload and meta params', () => {
