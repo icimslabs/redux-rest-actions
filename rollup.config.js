@@ -3,10 +3,9 @@ import commonjs from 'rollup-plugin-commonjs';
 import pkg from './package.json';
 import babel from 'rollup-plugin-babel';
 import json from 'rollup-plugin-json';
-import minify from 'rollup-plugin-babel-minify';
 import builtins from 'rollup-plugin-node-builtins';
 import analyze from 'rollup-plugin-analyzer';
-import { terser } from "rollup-plugin-terser";
+import {terser} from 'rollup-plugin-terser';
 
 export default [
   // browser-friendly UMD build
@@ -15,7 +14,7 @@ export default [
     output: {
       name: 'main',
       file: pkg.browser,
-      format: 'umd',
+      format: 'umd'
     },
     plugins: [
       resolve({jsnext: true, preferBuiltins: true, browser: true}),
@@ -24,12 +23,11 @@ export default [
         exclude: 'node_modules/**',
         runtimeHelpers: true
       }),
-      minify(),
       json({}),
       builtins(),
       analyze({summaryOnly: true}),
       terser()
-    ],
+    ]
   },
 
   // CommonJS (for Node) and ES module (for bundlers) build.
@@ -41,9 +39,6 @@ export default [
   {
     input: 'src/main.js',
     external: [],
-    output: [
-      { file: pkg.main, format: 'cjs' },
-      { file: pkg.module, format: 'es' },
-    ],
-  },
+    output: [{file: pkg.main, format: 'cjs'}, {file: pkg.module, format: 'es'}]
+  }
 ];

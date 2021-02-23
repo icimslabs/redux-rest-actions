@@ -865,7 +865,7 @@ describe('Api Middleware tests', () => {
     await api.getTodos3();
     const actions = store.getActions();
     expect(actions.length).toBe(2);
-    expect(actions[1].meta.config.url).toBe('https://myserver/api/todos3');
+    expect(actions[1].meta.config.url).toBe('/api/todos3');
     expect(actions[1].meta.config.headers['X-Header1']).toBe('header1');
     expect(actions[1].meta.config.headers['X-Header2']).toBe('header2');
   });
@@ -888,7 +888,7 @@ describe('Api Middleware tests', () => {
     await api.getTodos3({}, requestConfig);
     const actions = store.getActions();
     expect(actions.length).toBe(2);
-    expect(actions[1].meta.config.url).toBe('https://myserver/api/todos3');
+    expect(actions[1].meta.config.url).toBe('/api/todos3');
     expect(actions[1].meta.config.headers['X-Header1']).toBe('header1');
     expect(actions[1].meta.config.headers['X-Header2']).toBe('header2');
     expect(actions[1].meta.config.params).toEqual({a: 'b'});
@@ -913,7 +913,7 @@ describe('Api Middleware tests', () => {
     await api.getTodos3({}, requestConfig);
     const actions = store.getActions();
     expect(actions.length).toBe(2);
-    expect(actions[1].meta.config.url).toBe('https://myserver/api/todos3');
+    expect(actions[1].meta.config.url).toBe('/api/todos3');
     expect(actions[1].meta.config.headers['X-Header1']).toBe('changed');
     expect(actions[1].meta.config.headers['X-Header2']).toBe('header2');
     expect(actions[1].meta.config.params).toEqual({a: 'b'});
