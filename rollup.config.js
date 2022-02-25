@@ -13,7 +13,7 @@ export default [
     input: 'src/main.js',
     output: {
       name: 'main',
-      file: pkg.browser,
+      file: 'dist/redux-rest-actions.umd.js',
       format: 'umd'
     },
     plugins: [
