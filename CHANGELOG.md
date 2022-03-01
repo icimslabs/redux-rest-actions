@@ -1,5 +1,12 @@
 # Change log
 
+## [1.1.6] - 2019-12-26
+
+Applied all git auto generated pull requests:
+
+- Merged all Git auto generated pull requests, merge# 19 - 32.
+- Removed browser entry from package.json so Webpack does not default to using the UMD bundle (which isn't tree shakable) instead of the ESM bundle
+
 ## [1.1.5] - 2019-12-26
 
 Applied all git auto generated pull requests:
