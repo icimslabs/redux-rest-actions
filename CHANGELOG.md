@@ -1,5 +1,10 @@
 # Change log
 
+## [1.1.7] - 2023-09-07
+
+- Merged dependabot pull requests
+- Explicitely use lodash debounce
+
 ## [1.1.6] - 2019-12-26
 
 Applied all git auto generated pull requests:
