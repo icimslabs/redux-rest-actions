@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.6.3",
-    "axios": "^0.21.2",
+    "axios": "^1.6.0",
     "core-js": "3",
     "fast-deep-equal": "^2.0.1",
     "lodash": "^4.17.21",
