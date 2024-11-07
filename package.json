@@ -1,7 +1,7 @@
 {
   "name": "redux-rest-actions",
   "version": "1.1.7",
-  "main": "dist/redux-rest-actions.cjs.js",
+  "main": "dist/redux-rest-actions.js",
   "module": "dist/redux-rest-actions.esm.js",
   "type": "module",
   "sideEffects": false,
@@ -19,6 +19,16 @@
     "lint": "npx eslint src",
     "test:coverage": "jest --collect-coverage",
     "clean": "rimraf coverage dist redux-rest-actions-*.tgz node_modules"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "default": "./dist/redux-rest-actions.esm.js"
+      },
+      "require": {
+        "default": "./dist/redux-rest-actions.cjs"
+      }
+    }
   },
   "dependencies": {
     "@babel/runtime": "^7.6.3",
